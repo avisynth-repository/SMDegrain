@@ -7,7 +7,7 @@
 ###          Special Thanks: Sagekilla, Didée, cretindesalpes, Gavino and MVtools people     ###
 ###                                                                                          ###
 ###                       v3.1.2d (Dogway's mod) - 21 July 2015                              ###
-###   v3.1.2.102s mod for v3.1.2d to fix subpixel=3 and add Prefilter auto 16 (lsb) support  ###
+###   v3.1.2.104s mod for v3.1.2d to fix subpixel=3 and add Prefilter auto 16 (lsb) support  ###
 ###                     and yuy2 support in avs 2.6 with masktools 2.6                       ###
 ### and medianblur2 now will be used in Minblur instead of Quantile RemoveGrainHD in avs 2.6 ###
 ###                                    and add TV_range bool                                 ###
@@ -591,7 +591,7 @@ ssD  = yuy26 ? ssD.ConvertToYUY2().Interleaved2planar(true) : ssD
 ssDD = ssD.repair(HD?ssD.repair(allD,1,planar=planar):allD,HD?12:1,planar=planar) # Limit the difference to the max of what the denoising removed locally.
 ssDD = yuy26 ? ssDD.Planar2Interleaved().ConvertToYV16() : ssDD
 ssD  = yuy26 ? ssD.Planar2Interleaved().ConvertToYV16() : ssD
-ssDD = avs26 ? SSDD.mt_lutxy(ssD,"x range_half - abs y range_half - abs < x y ?",use_expr=2)
+ssDD = avs26 ? SSDD.mt_lutxy(ssD,"x range_half - abs y range_half - abs < x y ?",use_expr=1)
        \     : SSDD.mt_lutxy(ssD,"x 128 - abs y 128 - abs < x y ?")                       # abs(diff) after limiting may not be bigger than before.
 
 denoised.mt_adddiff(ssDD,U=2,V=2)                                                 # Apply the limited difference. (Sharpening is just inverse blurring)
@@ -634,7 +634,7 @@ RG4D  = (rg4v) ? yuy26 ? mt_makediff(clp.Planar2Interleaved(uv2==1).ConvertToYV1
  \    :          avs26 ? yuy26 ? eval("mt_makediff(clp.Planar2Interleaved(uv2==1).ConvertToYV16(),clp.Planar2Interleaved(uv2==1).ConvertToYV16()."+blurstr+",U=uv2,V=uv2).ConvertToYUY2().Interleaved2planar(uv2==1)") : eval("mt_makediff(clp,clp."+blurstr+",U=uv2,V=uv2)") : mt_makediff(clp,clp.Quantile(radius_y=3, radius_u=uvm3, radius_v=uvm3, planar=planar), U=uv2,V=uv2)
 #RG4D  = blurrep ? RG4D.Repair(clp.removegrain(3,uv==3 ? 0 : -1,planar=planar),9,uv==3 ? 0 : -1,planar=planar) : RG4D
 DD    = yuy26 ? mt_lutxy(RG11D.Planar2Interleaved(uv2==1).ConvertToYV16(),RG4D.Planar2Interleaved(uv2==1).ConvertToYV16(),"x 128 - y 128 - * 0 < 128 x 128 - abs y 128 - abs < x y ? ?",U=uv2,V=uv2).ConvertToYUY2().Interleaved2planar(uv==1)
-    \ : avs26 ? mt_lutxy(RG11D,RG4D,"x range_half - y range_half - * 0 < range_half x range_half - abs y range_half - abs < x y ? ?",use_expr=2,U=uv2,V=uv2)
+    \ : avs26 ? mt_lutxy(RG11D,RG4D,"x range_half - y range_half - * 0 < range_half x range_half - abs y range_half - abs < x y ? ?",use_expr=1,U=uv2,V=uv2)
     \         : mt_lutxy(RG11D,RG4D,"x 128 - y 128 - * 0 < 128 x 128 - abs y 128 - abs < x y ? ?",U=uv2,V=uv2)
 yuy26 ? clp.Planar2Interleaved(uv==1).ConvertToYV16().mt_makediff(DD.Planar2Interleaved(uv==1).ConvertToYV16(),U=uv,V=uv).ConvertToYUY2().Interleaved2planar(uv==1) : clp.mt_makediff(DD,U=uv,V=uv)
 blurrep ? Repair(clp.removegrain(17,uv==3 ? 0 : -1,planar=planar),9,uv==3 ? 0 : -1,planar=planar) : last
@@ -653,7 +653,7 @@ yuy26 = avs26 && Isyuy2(c) && planar
 rg11   = c.removegrain(11,-1,planar=planar)
 rg11D  = yuy26 ? mt_makediff(c.Planar2Interleaved(true).ConvertToYV16(),rg11.Planar2Interleaved(true).ConvertToYV16()).ConvertToYUY2().Interleaved2planar(true) : mt_makediff(c,rg11)
 rg11DD = yuy26 ? mt_makediff(rg11D.Planar2Interleaved(true).ConvertToYV16(),rg11D.removegrain(11,-1,planar=planar).Planar2Interleaved(true).ConvertToYV16()).mt_lutxy(rg11D.Planar2Interleaved(true).ConvertToYV16(),"x 128 - y 128 - * 0 < 128 x 128 - abs y 128 - abs < x y ? ?").ConvertToYUY2().Interleaved2planar(true)
-     \ : avs26 ? mt_makediff(rg11D,rg11D.removegrain(11,-1,planar=planar)).mt_lutxy(rg11D,"x range_half - y range_half - * 0 < range_half x range_half - abs y range_half - abs < x y ? ?",use_expr=2)
+     \ : avs26 ? mt_makediff(rg11D,rg11D.removegrain(11,-1,planar=planar)).mt_lutxy(rg11D,"x range_half - y range_half - * 0 < range_half x range_half - abs y range_half - abs < x y ? ?",use_expr=1)
      \         : mt_makediff(rg11D,rg11D.removegrain(11,-1,planar=planar)).mt_lutxy(rg11D,"x 128 - y 128 - * 0 < 128 x 128 - abs y 128 - abs < x y ? ?")
 yuy26 ? c.Planar2Interleaved().ConvertToYV16().mt_makediff(rg11DD.Planar2Interleaved().ConvertToYV16(),U=2,V=2).ConvertToYUY2().Interleaved2planar() : c.mt_makediff(rg11DD,U=2,V=2) }
 
